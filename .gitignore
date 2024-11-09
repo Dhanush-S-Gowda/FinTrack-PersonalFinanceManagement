@@ -1,0 +1,83 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment directories
+env/
+venv/
+ENV/
+.venv/
+.ENV/
+
+# Environment variable files
+*.env
+.env.*
+
+# Flask instance folder
+instance/
+
+# Flask cache files
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+
+# MacOS files
+.DS_Store
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+.hypothesis/
+
+# Pytest cache
+.pytest_cache/
+
+# Static asset caches
+staticfiles/
+node_modules/
+npm-debug.log*
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# SQL database files
+*.sqlite3
+
+# Compiled JavaScript
+*.js.map
+
+# Logs
+logs/
+*.log

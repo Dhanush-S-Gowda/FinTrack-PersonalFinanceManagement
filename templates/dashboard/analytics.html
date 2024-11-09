@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    {% if not has_data %}
+    <div class="alert alert-info">
+        <h4>No Data Available</h4>
+        <p>Start adding transactions to see your financial insights.</p>
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">Add Transaction</a>
+    </div>
+    {% else %}
+    <!-- AI Insights Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h3>AI Insights</h3>
+            <ul class="list-group">
+                {% for insight in insights %}
+                <li class="list-group-item">
+                    <strong>{{ insight.title }}:</strong> {{ insight.message }}
+                    {% if insight.comparison %}
+                    <span class="badge badge-{{ 'success' if insight.comparison == 'below' else 'danger' }}">
+                        {{ 'Below Optimal' if insight.comparison == 'below' else 'Above Optimal' }}
+                    </span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Graphs Section -->
+    <div class="row mb-4">
+        <!-- Charts will be added here -->
+        <div class="col-md-6 chart-container mb-5">
+            <div id="timeSeriesChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Time series chart showing daily income and expenses.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="dayOfWeekStackedChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Weekly patterns of income and expenses.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="dailyAvgSpendingChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Average daily spending trends.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="categoryIncomeExpenseChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Income and expenses by category.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="monthlyTrendsChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Monthly income and expense trends.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="rollingExpensesChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">7-day rolling expense totals.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="scatterDayPatternChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Individual transaction patterns by day.</p>
+        </div>
+
+        <div class="col-md-6 chart-container mb-5">
+            <div id="expensePieChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Distribution of expenses by category.</p>
+        </div>
+
+        <div class="col-md-12 chart-container mb-5">
+            <div id="dayStackChart" style="height: 400px;"></div>
+            <p class="text-secondary mt-2">Daily income and expenses stacked view.</p>
+        </div>
+    </div>
+
+    <script>
+        // Add console logging for debugging
+        console.log('Starting chart creation...');
+
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(value);
+        }
+
+        // 1. Time Series Line Chart
+        const timeSeriesData = {{ time_series|tojson|safe }};
+        console.log('Time Series Data:', timeSeriesData);
+        Plotly.newPlot('timeSeriesChart', [
+            {
+                x: timeSeriesData.date,
+                y: timeSeriesData.income || [],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Income',
+                line: { color: '#2563eb' }
+            },
+            {
+                x: timeSeriesData.date,
+                y: timeSeriesData.expense || [],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Expense',
+                line: { color: '#dc2626' }
+            }
+        ], {
+            title: 'Daily Income and Expense Time Series',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Date' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 2. Stacked Bar Chart for Income and Expense by Day of the Week
+        const dayOfWeekData = {{ day_of_week_summary|tojson|safe }};
+        console.log('Day of Week Data:', dayOfWeekData);
+        Plotly.newPlot('dayOfWeekStackedChart', [
+            {
+                x: dayOfWeekData.day_of_week,
+                y: dayOfWeekData.income || [],
+                type: 'bar',
+                name: 'Income',
+                marker: { color: '#2563eb' }
+            },
+            {
+                x: dayOfWeekData.day_of_week,
+                y: dayOfWeekData.expense || [],
+                type: 'bar',
+                name: 'Expense',
+                marker: { color: '#dc2626' }
+            }
+        ], {
+            title: 'Income and Expense by Day of the Week',
+            barmode: 'stack',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Day of the Week' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 3. Average Daily Spending Over Time
+        const dailyAvgSpendingData = {{ daily_avg_spending|tojson|safe }};
+        console.log('Daily Avg Spending Data:', dailyAvgSpendingData);
+        Plotly.newPlot('dailyAvgSpendingChart', [{
+            x: dailyAvgSpendingData.date,
+            y: dailyAvgSpendingData.amount,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Average Daily Spending',
+            line: { color: '#1e40af' }
+        }], {
+            title: 'Average Daily Spending Over Time',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Date' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 4. Income vs. Expense by Category
+        const categoryIncomeExpenseData = {{ category_income_expense|tojson|safe }};
+        console.log('Category Income/Expense Data:', categoryIncomeExpenseData);
+        Plotly.newPlot('categoryIncomeExpenseChart', [
+            {
+                x: categoryIncomeExpenseData.category,
+                y: categoryIncomeExpenseData.income || [],
+                type: 'bar',
+                name: 'Income',
+                marker: { color: '#16a34a' }
+            },
+            {
+                x: categoryIncomeExpenseData.category,
+                y: categoryIncomeExpenseData.expense || [],
+                type: 'bar',
+                name: 'Expense',
+                marker: { color: '#f59e0b' }
+            }
+        ], {
+            title: 'Income vs. Expense by Category',
+            barmode: 'stack',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Category' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 5. Month-over-Month Trends
+        const monthlyTrendsData = {{ monthly_trends|tojson|safe }};
+        console.log('Monthly Trends Data:', monthlyTrendsData);
+        Plotly.newPlot('monthlyTrendsChart', [
+            {
+                x: monthlyTrendsData.date,
+                y: monthlyTrendsData.income || [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Income',
+                line: { color: '#2563eb' }
+            },
+            {
+                x: monthlyTrendsData.date,
+                y: monthlyTrendsData.expense || [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Expense',
+                line: { color: '#dc2626' }
+            }
+        ], {
+            title: 'Month-over-Month Expense and Income Trends',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Month' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 6. Rolling 7-Day Expenses
+        const rollingExpensesData = {{ rolling_expenses|tojson|safe }};
+        console.log('Rolling Expenses Data:', rollingExpensesData);
+        Plotly.newPlot('rollingExpensesChart', [{
+            x: rollingExpensesData.date,
+            y: rollingExpensesData.rolling_sum,
+            type: 'scatter',
+            mode: 'lines',
+            name: '7-Day Rolling Total',
+            line: { color: '#991b1b' }
+        }], {
+            title: 'Rolling 7-Day Total Expenses',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Date' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 7. Scatter Plot
+        const scatterDayPatternData = {{ scatter_day_pattern|tojson|safe }};
+        console.log('Scatter Pattern Data:', scatterDayPatternData);
+        Plotly.newPlot('scatterDayPatternChart', [{
+            x: scatterDayPatternData.day_of_week,
+            y: scatterDayPatternData.amount,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { 
+                size: 8, 
+                color: '#1e40af',
+                opacity: 0.6
+            }
+        }], {
+            title: 'Spending Patterns by Day of the Week',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Day of the Week' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+
+        // 8. Pie Chart for Expense Distribution by Category
+        const expensePieChartData = {{ expense_pie_chart|tojson|safe }};
+        console.log('Pie Chart Data:', expensePieChartData);
+        Plotly.newPlot('expensePieChart', [{
+            labels: expensePieChartData.category,
+            values: expensePieChartData.amount,
+            type: 'pie',
+            hole: 0.4,
+            marker: {
+                colors: [
+                    '#2563eb', '#1e40af', '#3b82f6', 
+                    '#60a5fa', '#93c5fd', '#bfdbfe',
+                    '#dbeafe', '#1d4ed8', '#2563eb'
+                ]
+            },
+            textinfo: 'label+percent',
+            hoverinfo: 'label+value+percent',
+            textposition: 'outside',
+            showlegend: true
+        }], {
+            title: 'Expense Distribution by Category',
+            margin: { t: 50, b: 50, l: 50, r: 50 },
+            height: 400,
+            legend: {
+                orientation: 'h',
+                yanchor: 'bottom',
+                y: -0.2,
+                xanchor: 'center',
+                x: 0.5
+            }
+        });
+
+        // 9. Daily Stack Chart
+        const dayStackData = {{ day_stack|tojson|safe }};
+        console.log('Day Stack Data:', dayStackData);
+        Plotly.newPlot('dayStackChart', [
+            {
+                x: dayStackData.date,
+                y: dayStackData.income || [],
+                type: 'bar',
+                name: 'Income',
+                marker: { color: '#2563eb' }
+            },
+            {
+                x: dayStackData.date,
+                y: dayStackData.expense || [],
+                type: 'bar',
+                name: 'Expense',
+                marker: { color: '#dc2626' }
+            }
+        ], {
+            title: 'Daily Income and Expense Stacked Bar Chart',
+            barmode: 'stack',
+            margin: { t: 40, b: 40, l: 60, r: 40 },
+            xaxis: { title: 'Date' },
+            yaxis: { 
+                title: 'Amount ($)',
+                tickformat: '$.2f'
+            },
+            height: 400
+        });
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

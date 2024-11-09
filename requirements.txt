@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask-login
+plotly
+pandas
+python-dateutil
+sqlalchemy
+werkzeug
+flask-wtf
+email-validator
