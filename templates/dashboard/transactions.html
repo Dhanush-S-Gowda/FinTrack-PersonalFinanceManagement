@@ -7,7 +7,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2>Transactions</h2>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
-                    Add Transaction
+                    <i class="fas fa-plus"></i> Add Transaction
                 </button>
             </div>
         </div>
@@ -16,16 +16,17 @@
     <!-- Transaction List -->
     <div class="card">
         <div class="card-body">
+            {% if transactions %}
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
                             <th>Date</th>
                             <th>Type</th>
                             <th>Category</th>
                             <th>Amount</th>
                             <th>Description</th>
-                            <th>Actions</th>
+                            <th style="width: 120px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,21 +35,21 @@
                             <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 <span class="badge bg-{{ 'success' if transaction.type == 'income' else 'danger' }}">
-                                    {{ transaction.type }}
+                                    {{ transaction.type.capitalize() }}
                                 </span>
                             </td>
                             <td>{{ transaction.category }}</td>
                             <td>{{ "%.2f"|format(transaction.amount) }}</td>
                             <td>{{ transaction.description }}</td>
                             <td>
-                                <div class="btn-group">
+                                <div class="btn-group" role="group">
                                     <button class="btn btn-sm btn-outline-primary" 
-                                            onclick="editTransaction({{ transaction.id }})">
+                                            onclick="editTransaction({{ transaction.id }})" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" 
-                                            onclick="deleteTransaction({{ transaction.id }})">
-                                        <i class="fas fa-trash"></i>
+                                            onclick="deleteTransaction({{ transaction.id }})" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
                             </td>
@@ -57,6 +58,9 @@
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <p class="text-center">No transactions found. Start by adding a new transaction.</p>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -65,11 +69,11 @@
 <div class="modal fade" id="addTransactionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Transaction</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
             <form action="{{ url_for('add_transaction') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Type</label>
@@ -82,15 +86,14 @@
                         <label class="form-label">Category</label>
                         <div class="input-group">
                             <select name="category" class="form-select" id="categorySelect">
-                                <option value="">-- Select or enter new category --</option>
+                                <option value="">-- Select Category --</option>
                                 {% for category in categories %}
                                 <option value="{{ category }}">{{ category }}</option>
                                 {% endfor %}
+                                <option value="new_category">Add New Category</option>
                             </select>
                             <input type="text" class="form-control" id="newCategory" 
-                                   placeholder="Enter new category" style="display: none;">
-                            <button class="btn btn-outline-secondary" type="button" 
-                                    id="toggleCategoryInput">New</button>
+                                   name="category_new" placeholder="Enter new category" style="display: none;">
                         </div>
                     </div>
                     <div class="mb-3">
@@ -99,7 +102,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Date</label>
-                        <input type="date" name="date" class="form-control" required>
+                        <input type="date" name="date" class="form-control" value="{{ date.today().strftime('%Y-%m-%d') }}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
@@ -107,8 +110,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Add Transaction</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add Transaction
+                    </button>
                 </div>
             </form>
         </div>
@@ -119,12 +126,12 @@
 <div class="modal fade" id="editTransactionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Transaction</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editTransactionForm" method="POST">
+            <form id="editTransactionForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
                     <input type="hidden" id="editTransactionId" name="transaction_id">
                     <div class="mb-3">
                         <label class="form-label">Date</label>
@@ -147,11 +154,18 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <input type="text" class="form-control" id="editDescription" name="description">
+                        <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -160,23 +174,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     const categorySelect = document.getElementById('categorySelect');
     const newCategory = document.getElementById('newCategory');
-    const toggleBtn = document.getElementById('toggleCategoryInput');
-    let isNewCategory = false;
 
-    toggleBtn.addEventListener('click', function() {
-        isNewCategory = !isNewCategory;
-        if (isNewCategory) {
-            categorySelect.style.display = 'none';
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'new_category') {
             newCategory.style.display = 'block';
-            toggleBtn.textContent = 'Select';
-            newCategory.name = 'category';
-            categorySelect.name = 'category_old';
         } else {
-            categorySelect.style.display = 'block';
             newCategory.style.display = 'none';
-            toggleBtn.textContent = 'New';
-            categorySelect.name = 'category';
-            newCategory.name = 'category_new';
         }
     });
 });
@@ -191,6 +194,10 @@ function editTransaction(id) {
             document.getElementById('editCategory').value = data.category;
             document.getElementById('editAmount').value = data.amount;
             document.getElementById('editDescription').value = data.description;
+
+            // Set the form action dynamically
+            document.getElementById('editTransactionForm').action = `/update_transaction/${id}`;
+
             new bootstrap.Modal(document.getElementById('editTransactionModal')).show();
         });
 }
@@ -201,6 +208,8 @@ function deleteTransaction(id) {
             .then(response => {
                 if (response.ok) {
                     window.location.reload();
+                } else {
+                    alert('Failed to delete transaction.');
                 }
             });
     }
