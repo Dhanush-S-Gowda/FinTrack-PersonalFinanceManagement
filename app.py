@@ -37,31 +37,35 @@ def create_app():
             CREATE TABLE IF NOT EXISTS user (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name VARCHAR(150) NOT NULL,
-                email VARCHAR(150) UNIQUE NOT NULL,
+                email VARCHAR(150) UNIQUE NOT NULL CHECK (email LIKE '%_@__%.__%'),
                 password VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         '''))
+
         db.session.execute(text('''
             CREATE TABLE IF NOT EXISTS "transaction" (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type VARCHAR(50) NOT NULL,
                 category VARCHAR(50) NOT NULL,
-                amount FLOAT NOT NULL,
+                amount FLOAT NOT NULL CHECK (amount > 0),
                 date TIMESTAMP NOT NULL,
                 description TEXT,
                 user_id INTEGER,
-                FOREIGN KEY (user_id) REFERENCES user (id)
+                FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
             )
         '''))
+
         db.session.execute(text('''
             CREATE TABLE IF NOT EXISTS category (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name VARCHAR(50) UNIQUE NOT NULL,
-                user_id INTEGER,
-                FOREIGN KEY (user_id) REFERENCES user (id)
+                user_id INTEGER NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                UNIQUE(name, user_id)
             )
         '''))
+
         db.session.commit()
 
     class User(UserMixin):
@@ -735,6 +739,9 @@ def create_app():
         # If 'Add New Category' is selected
         if category == 'new_category':
             category = request.form.get('category_new')
+        if float(amount) <= 0:
+            flash('Amount must be greater than 0.', 'danger')
+            return redirect(url_for("transactions"))
 
         if category:
             existing_category = db.session.execute(
