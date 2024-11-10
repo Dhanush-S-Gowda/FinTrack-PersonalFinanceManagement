@@ -151,7 +151,11 @@ def create_app():
 
         flash('Dummy data added successfully!', 'success')
         return redirect(url_for('transactions'))
-
+    @app.route('/')
+    def index():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
 
 
     @app.route('/login', methods=['GET', 'POST'])
