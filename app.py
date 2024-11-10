@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from extensions import db, mail
+from extensions import db
 from config import Config
 from datetime import datetime, timedelta
 from sqlalchemy import text

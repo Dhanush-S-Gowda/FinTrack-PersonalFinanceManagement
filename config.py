@@ -14,15 +14,4 @@ class Config:
     
     # Application settings
     TRANSACTIONS_PER_PAGE = 10
-    ALLOWED_CATEGORIES = [
-        'Salary',
-        'Investments',
-        'Food',
-        'Transportation',
-        'Housing',
-        'Utilities',
-        'Entertainment',
-        'Healthcare',
-        'Shopping',
-        'Others'
-    ]
+    
