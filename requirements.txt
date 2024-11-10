@@ -7,4 +7,3 @@ python-dateutil
 sqlalchemy
 werkzeug
 flask-wtf
-email-validator
